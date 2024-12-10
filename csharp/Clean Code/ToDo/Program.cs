@@ -5,106 +5,132 @@ namespace ToDo
 {
     internal class Program
     {
-        public static List<string> TL { get; set; }
+        private const int OptionsLength = 3;
+
+        public static int option {get;set;}
+        public static List<string> TaskList { get; set; }
 
         static void Main(string[] args)
         {
-            TL = new List<string>();
-            int variable = 0;
-            do
-            {
-                variable = ShowMainMenu();
-                if (variable == 1)
-                {
-                    ShowMenuAdd();
-                }
-                else if (variable == 2)
-                {
-                    ShowMenuDos();
-                }
-                else if (variable == 3)
-                {
-                    ShowMenuTres();
-                }
-            } while (variable != 4);
+           InitToDo();
         }
-        /// <summary>
-        /// Show the main menu 
-        /// </summary>
-        /// <returns>Returns option indicated by user</returns>
+
+        public static void InitToDo(){
+            TaskList = new List<string>();
+            option = 0;
+            do{
+                HandleMenu(option);
+            }while(option != 4);
+        }
+
+        public static void HandleMenu(int option){
+
+                option = ShowMainMenu();
+                switch (option)
+                {
+                    case 1: ShowAddTask(); break;
+                    case 2: ShowRemoveTask(); break;
+                    case 3: ShowPendingTasks(); break;
+                    case 4: ExitToDo(); break;
+                    default: Console.WriteLine("Please enter a valid option."); break;
+                }
+        }
+
+
+
         public static int ShowMainMenu()
         {
+            string[] options =  {"1. New task",
+                                            "2. Remove task",
+                                            "3. Pending tasks",
+                                            "4. Exit"};
+
             Console.WriteLine("----------------------------------------");
             Console.WriteLine("Enter the option to perform: ");
-            Console.WriteLine("1. New task");
-            Console.WriteLine("2. Remove task");
-            Console.WriteLine("3. Pending tasks");
-            Console.WriteLine("4. Exit");
+                              
+            for (int index = 0; index < options.Count(); index++)
+            {
+                Console.WriteLine(options[index]);
+            }
 
-            // Read line
+           
+            return GetMenuOption();
+        }
+
+        private static int GetMenuOption()
+        {
             string line = Console.ReadLine();
             return Convert.ToInt32(line);
         }
 
-        public static void ShowMenuDos()
-        {
-            try
-            {
-                Console.WriteLine("Enter the number of the task to remove: ");
-                // Show current taks
-                for (int i = 0; i < TL.Count; i++)
-                {
-                    Console.WriteLine((i + 1) + ". " + TL[i]);
-                }
-                Console.WriteLine("----------------------------------------");
-
-                string line = Console.ReadLine();
-                // Remove one position
-                int indexToRemove = Convert.ToInt32(line) - 1;
-                if (indexToRemove > -1)
-                {
-                    if (TL.Count > 0)
-                    {
-                        string task = TL[indexToRemove];
-                        TL.RemoveAt(indexToRemove);
-                        Console.WriteLine("Task " + task + " deleted");
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public static void ShowMenuAdd()
+        public static void ShowAddTask()
         {
             try
             {
                 Console.WriteLine("Enter the name of the task: ");
                 string task = Console.ReadLine();
-                TL.Add(task);
+                TaskList.Add(task);
                 Console.WriteLine("Task registered successfully");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ShowErrorMessage(ex.Message);
             }
         }
 
-        public static void ShowMenuTres()
+        public static void ShowRemoveTask()
         {
-            if (TL == null || TL.Count == 0)
+            try
             {
-                Console.WriteLine("There are no tasks to perform");
+                Console.WriteLine("Enter the number of the task to remove: ");
+                // Show current taks
+                for (int i = 0; i < TaskList.Count; i++)
+                {
+                    // (i + 1) - add one to tasks index to show a friendly-user list
+                    Console.WriteLine((i + 1) + ". " + TaskList[i]);
+                }
+                Console.WriteLine("----------------------------------------");
+
+                string taskIndex = Console.ReadLine();
+                // Removes one index to avoid outOfIndex error.
+                int indexToRemove = Convert.ToInt32(taskIndex) - 1;
+                if (indexToRemove > 0)
+                {
+                    string task = TaskList[indexToRemove];
+                    TaskList.RemoveAt(indexToRemove);
+                    Console.WriteLine("Task " + task + " deleted.");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage(ex.Message);
+            }
+        }
+
+        public static void ShowPendingTasks()
+        {
+            if (TaskList is null || TaskList.Count == 0)
+            {
+                Console.WriteLine("There are no tasks to perform.");
             } 
             else
             {
                 Console.WriteLine("----------------------------------------");
-                for (int i = 0; i < TL.Count; i++)
+                for (int i = 0; i < TaskList.Count; i++)
                 {
-                    Console.WriteLine((i + 1) + ". " + TL[i]);
+                    Console.WriteLine((i + 1) + ". " + TaskList[i]);
                 }
                 Console.WriteLine("----------------------------------------");
             }
+        }
+
+        private static void ExitToDo(){
+            Console.WriteLine("Exiting ToDo... See you later!");
+            System.Environment.Exit(0);
+        }
+
+        private static void ShowErrorMessage(string error){
+            Console.WriteLine($"An error has ocurred: {error}. Redirecting to main menu.");
         }
     }
 }
