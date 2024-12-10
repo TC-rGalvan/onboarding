@@ -5,8 +5,6 @@ namespace ToDo
 {
     internal class Program
     {
-        private const int OptionsLength = 3;
-
         public static int option {get;set;}
         public static List<string> TaskList { get; set; }
 
@@ -36,14 +34,12 @@ namespace ToDo
                 }
         }
 
-
-
         public static int ShowMainMenu()
         {
             string[] options =  {"1. New task",
-                                            "2. Remove task",
-                                            "3. Pending tasks",
-                                            "4. Exit"};
+                                "2. Remove task",
+                                "3. Pending tasks",
+                                "4. Exit"};
 
             Console.WriteLine("----------------------------------------");
             Console.WriteLine("Enter the option to perform: ");
@@ -52,15 +48,14 @@ namespace ToDo
             {
                 Console.WriteLine(options[index]);
             }
-
            
             return GetMenuOption();
         }
 
         private static int GetMenuOption()
         {
-            string line = Console.ReadLine();
-            return Convert.ToInt32(line);
+            string inputOption = Console.ReadLine();
+            return Convert.ToInt32(inputOption);
         }
 
         public static void ShowAddTask()
@@ -83,15 +78,15 @@ namespace ToDo
             try
             {
                 Console.WriteLine("Enter the number of the task to remove: ");
-                // Show current taks
                 for (int i = 0; i < TaskList.Count; i++)
                 {
-                    // (i + 1) - add one to tasks index to show a friendly-user list
+                    // (i + 1): add one to tasks index to show a friendly-user list
                     Console.WriteLine((i + 1) + ". " + TaskList[i]);
                 }
                 Console.WriteLine("----------------------------------------");
 
                 string taskIndex = Console.ReadLine();
+
                 // Removes one index to avoid outOfIndex error.
                 int indexToRemove = Convert.ToInt32(taskIndex) - 1;
                 if (indexToRemove > 0)
@@ -129,6 +124,10 @@ namespace ToDo
             System.Environment.Exit(0);
         }
 
+        /// <summary>
+        /// Show Error message to avoid exiting application when an exception occurs
+        /// </summary>
+         /// <param name="error">Message to show</param>
         private static void ShowErrorMessage(string error){
             Console.WriteLine($"An error has ocurred: {error}. Redirecting to main menu.");
         }
