@@ -1,7 +1,10 @@
 ﻿using SingleResponsability;
 
 StudentRepository studentRepository = new();
-studentRepository.Export();
+
+StudentExporter exporter = new ();
+exporter.ExportCSV(studentRepository.GetAll());
+
 Console.WriteLine("Process completed!");
 
 Console.WriteLine("Press any key to finish...");
