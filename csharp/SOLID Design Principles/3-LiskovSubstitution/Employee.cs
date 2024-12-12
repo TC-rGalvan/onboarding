@@ -2,20 +2,18 @@ namespace Liskov
 {
     public abstract class Employee
     {
-        public string Fullname { get; set; }
-        public int HoursWorked { get; set; }
-        public int ExtraHours {get;set;}
+        public EmployeeData Info { get; set; }
+        public abstract int HourValue {get; set;}
 
-        public  Employee(string fullname, int hoursWorked, int ExtraHours)
+        public  Employee(EmployeeData info)
         {
-            Fullname = fullname;
-            HoursWorked = hoursWorked;
+           Info = info;
         }  
 
         public virtual decimal CalculateSalary (bool IsFullTime)
         {   
-            decimal hourValue = IsFullTime ? 50 : 40;
-            return hourValue * (HoursWorked + ExtraHours);
+            HourValue = IsFullTime ? 50 : 40;
+            return HourValue * (Info.HoursWorked + Info.ExtraHours);
         } 
     }
 }

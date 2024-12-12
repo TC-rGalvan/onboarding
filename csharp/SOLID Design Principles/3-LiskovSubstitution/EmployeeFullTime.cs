@@ -2,8 +2,16 @@ namespace Liskov
 {
     public class EmployeeFullTime : Employee
     {
-        public EmployeeFullTime(string fullname, int hoursWorked, int extrahours) : base(fullname, hoursWorked, extrahours)
+        public override int HourValue { get; set; }
+
+        public EmployeeFullTime(EmployeeData info) : base(info)
         {
+            HourValue = 50;
         }
+
+        public override decimal CalculateSalary (bool IsFullTime =  true)
+        {   
+            return HourValue * (Info.HoursWorked + Info.ExtraHours);
+        } 
     }
 }
