@@ -5,7 +5,7 @@ namespace ToDo
 {
     internal class Program
     {
-        public static int option {get;set;}
+        public static int Option {get;set;}
         public static List<string> TaskList { get; set; }
 
         static void Main(string[] args)
@@ -15,22 +15,22 @@ namespace ToDo
 
         public static void InitToDo(){
             TaskList = new List<string>();
-            option = 0;
+            Option = 0;
             do{
-                HandleMenu(option);
-            }while(option != 4);
+                HandleMenu(Option);
+            }while(Option != 4);
         }
 
-        public static void HandleMenu(int option){
+        public static void HandleMenu(int Option){
 
-                option = ShowMainMenu();
-                switch (option)
+                Option = ShowMainMenu();
+                switch (Option)
                 {
                     case 1: ShowAddTask(); break;
                     case 2: ShowRemoveTask(); break;
                     case 3: ShowPendingTasks(); break;
                     case 4: ExitToDo(); break;
-                    default: Console.WriteLine("Please enter a valid option."); break;
+                    default: Console.WriteLine("Please enter a valid Option."); break;
                 }
         }
 
@@ -42,7 +42,7 @@ namespace ToDo
                                 "4. Exit"};
 
             Console.WriteLine("----------------------------------------");
-            Console.WriteLine("Enter the option to perform: ");
+            Console.WriteLine("Enter the Option to perform: ");
                               
             for (int index = 0; index < options.Count(); index++)
             {
