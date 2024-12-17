@@ -1,5 +1,6 @@
 -module(recursive).
--export([fac/1, len/1, tail_fac/1, tail_len/1, duplicate/2, tail_duplicate/2, reverse/1, tail_reverse/1, sublist/2]).
+-compile([debug_info, export_all]).
+% -export([fac/1, len/1, tail_fac/1, tail_len/1, duplicate/2, tail_duplicate/2, reverse/1, tail_reverse/1, sublist/2, tail_sublist/2]).
 
 
 fac(0) -> 1;
@@ -40,8 +41,30 @@ sublist(_, 0) -> [];
 sublist([], _) -> [];
 sublist([H|T], N) when N > 0 -> [H | sublist(T, N - 1)].
 
-tail_sublist(L, N) -> tail_sublist(L, N, []).
+%% Always use lists:reverse to efficiently reverse lists
+tail_sublist(L, N) -> lists:reverse(tail_sublist(L, N, [])).
 tail_sublist(_, 0, Sublist) -> Sublist;
 tail_sublist([], _, Sublist) -> Sublist;
 tail_sublist([H|T], N, Sublist) when N > 0 -> 
     tail_sublist(T,  N - 1, [H | Sublist]).
+
+zip([], []) -> [];
+zip([X | Xs], [Y | Ys]) ->
+    [{X, Y} | zip(Xs, Ys)].
+
+tail_zip(List_one, List_two) ->
+    tail_zip(List_one, List_two, []).
+tail_zip([], [], Acc) -> Acc;
+tail_zip([X | Xs], [Y | Ys], Acc) ->
+    tail_zip(Xs, Ys, [{X, Y } | Acc]).
+
+lenient_zip(_, []) -> [];
+lenient_zip([], _) -> [];
+lenient_zip([X | Xs], [Y | Ys]) ->
+    [{X,  Y} | lenient_zip(Xs, Ys)].
+
+tail_lenient_zip(X, Y) -> tail_lenient_zip(X, Y, []).
+tail_lenient_zip(_, [], Acc) -> Acc;
+tail_lenient_zip([], _, Acc) -> Acc;
+tail_lenient_zip([X | Xs], [Y | Ys], Acc) ->
+    [{X, Y} | tail_lenient_zip(Xs, Ys, Acc)].
