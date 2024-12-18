@@ -68,3 +68,20 @@ tail_lenient_zip(_, [], Acc) -> Acc;
 tail_lenient_zip([], _, Acc) -> Acc;
 tail_lenient_zip([X | Xs], [Y | Ys], Acc) ->
     [{X, Y} | tail_lenient_zip(Xs, Ys, Acc)].
+
+quicksort([]) -> [];
+quicksort([Pivot | Rest]) ->
+    {Smaller, Larger} = partition(Pivot, Rest, [], []),
+    quicksort(Smaller) ++ [Pivot] ++ quicksort(Larger).
+
+partition(_, [], Smaller, Larger) -> {Smaller, Larger};
+partition(Pivot, [H|T], Smaller, Larger) ->
+    if 
+        H =< Pivot -> partition(Pivot, T, [H|Smaller], Larger);
+        H > Pivot -> partition(Pivot, T, Smaller, [H|Larger])
+end.
+    
+printHello(0) -> ok;
+printHello(N) when N >= 0 -> 
+    io:format("Hello world ~n"),
+    printHello(N - 1).
