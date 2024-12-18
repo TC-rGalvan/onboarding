@@ -53,7 +53,7 @@ zip([X | Xs], [Y | Ys]) ->
     [{X, Y} | zip(Xs, Ys)].
 
 tail_zip(List_one, List_two) ->
-    tail_zip(List_one, List_two, []).
+    lists:reverse(tail_zip(List_one, List_two, [])).
 tail_zip([], [], Acc) -> Acc;
 tail_zip([X | Xs], [Y | Ys], Acc) ->
     tail_zip(Xs, Ys, [{X, Y } | Acc]).
