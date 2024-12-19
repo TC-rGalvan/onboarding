@@ -16,7 +16,10 @@ start(_Type, _Args) ->
 	% Non-secure http listener
 	{ok, _} = cowboy:start_clear(my_http_listener,
 			[{port, 8080}],
-			#{env => #{dispatch => Dispatch}}
+			#{
+				env => #{dispatch => Dispatch},
+				middlewares => [cowboy_router, cowboy_handler]
+			}
 		),
 	erlang_sup:start_link().
 
