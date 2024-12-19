@@ -1,28 +1,22 @@
 -module(json_handler).
+
 -behavior(cowboy_rest).
 
--export([init/2, 
-				allowed_methods/2,
-				content_types_provided/2,
-				hello_from_json/2]).
+-export([init/2,
+		content_types_provided/2,
+		allowed_methods/2,
+		to_json/2]).
 
 init(Req, State) ->
 	{cowboy_rest, Req, State}.
 
 allowed_methods(Req, State) ->
-	{[<<"GET">>], Req, State}. 
-
+	{[<<"GET">>, <<"POST">>], Req, State}. 
 content_types_provided(Req, State) ->
-	{[
-		{{<<"application">>, <<"json">>, []}, hello_from_json}
+		{[{{<<"application">>, <<"json">>, []}, to_json}
 	], Req, State}.
+to_json(Req, State) ->
+	Response = #{hello => <<"Hello world from json!">>},
+	{jsx:encode(Response), Req, State}.
+		% {jiffy:encode(Response), Req, State}.
 
-hello_from_json(Req, State) ->
-	Message = #{hello => <<"Hello world from json!">>},
-	% {[jsx:encode(Message)], Req, State}.
-	% {ok, Body, Req} = jsx:encode(Message),
-	Req1 = cowboy_req:reply(200,
-	#{<<"content-type">> => <<"application/json">>}, 
-	Message,
-	Req),
-	{ok, Req1, State}.
