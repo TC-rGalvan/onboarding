@@ -19,6 +19,7 @@ node_timer_service
 tt_logger
 node_modules
 /_build/
+/_rel/
 dump.rdb
 erlang_ls.config
 .vscode
