@@ -8,7 +8,8 @@ start(_Type, _Args) ->
 	Dispatch = cowboy_router:compile([
 		{'_', [
 				{"/", hello_handler, []},
-				{"/json", json_handler, []}
+				{"/json", json_handler, []},
+				{"/organization", organization_handler, []}
 			]
 		}
 	]),
