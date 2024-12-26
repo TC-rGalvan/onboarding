@@ -8,7 +8,8 @@
         stdlib,
         cowboy,
         jsx,
-        jiffy
+        jiffy,
+        eredis
     ]},
     {env, []},
     {modules, [json_handler]}

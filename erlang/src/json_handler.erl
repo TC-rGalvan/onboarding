@@ -6,6 +6,8 @@
 		allowed_methods/2,
 		to_json/2]).
 
+% -record(name, {field = Value :: Type()}).
+
 init(Req, State) ->
 	{cowboy_rest, Req, State}.
 
@@ -18,6 +20,10 @@ content_types_provided(Req, State) ->
 
 to_json(Req, State) ->
 	Response = #{<<"hello">> => <<"Hello world from json!">>},
+	io:format("before redis~n"),
+	{ok, C} = eredis:start_link(),
+	{ok, <<"OK">>} = eredis:q(C, ["SET", "hello", "world"]),
+	io:format("after redis~n"),
 	{jsx:encode(Response), Req, State}.
 	% {jiffy:encode(Response), Req, State}.
 
