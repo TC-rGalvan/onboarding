@@ -9,7 +9,10 @@ start(_Type, _Args) ->
 		{'_', [
 				{"/", hello_handler, []},
 				{"/json", json_handler, []},
-				{"/organization", organization_handler, []}
+				{"/organization", organization_handler, []},
+				{"/organization/all", organization_handler, []},
+				{"/organization/:id", organization_handler, []},
+				{"/organization/search", organization_handler, []}
 			]
 		}
 	]),

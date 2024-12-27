@@ -7,7 +7,7 @@
 }).
 
 new_organization(Id, Name) ->
-    #organization{id=Id, name=Name}.
+    #organization{id = Id, name = Name}.
 
 to_json(#organization{id = Id, name = Name}) ->
     jsx:encode(#{
@@ -21,4 +21,7 @@ from_json(Json) ->
         <<"name">> := Name
     } = jsx:decode(Json, [return_maps]),
 
-    #organization{id=binary_to_list(Id), name=binary_to_list(Name)}.
+    #organization{
+        id = binary_to_list(Id),
+        name = binary_to_list(Name)
+    }.
