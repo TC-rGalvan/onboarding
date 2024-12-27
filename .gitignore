@@ -351,3 +351,6 @@ MigrationBackup/
 
 # VSCode working folder
 .vscode/*
+
+/erlang/_build/
+/erlang/_rel/

@@ -1,5 +1,5 @@
 PROJECT = erlang
-PROJECT_DESCRIPTION = New project
+PROJECT_DESCRIPTION = Role management system - Healthcare
 PROJECT_VERSION = 0.1.0
 
 DEPS = cowboy jiffy jsx eredis
@@ -9,7 +9,7 @@ DEP_PLUGINS = cowboy jiffy jsx eredis
 
 dep_jiffy = git https://github.com/davisp/jiffy
 dep_jsx = git https://github.com/talentdeficit/jsx#encoder3-decoder3--parser
-dep_eredis = git https://github.com/wooga/eredis.git
+dep_eredis = git https://github.com/wooga/eredis.gitq
 
 REL_DEPS += relx
 include erlang.mk
