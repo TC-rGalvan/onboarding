@@ -6,6 +6,8 @@
 		allowed_methods/2,
 		to_json/2]).
 
+% -record(name, {field = Value :: Type()}).
+
 init(Req, State) ->
 	{cowboy_rest, Req, State}.
 

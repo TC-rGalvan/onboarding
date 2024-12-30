@@ -10,7 +10,8 @@ create(Type, Id, Data) ->
 
 read(Type, Id) ->
     {ok, C} = start_link(),
-    eredis:q(C, ["GET", Type ++ ":" ++ Id]).
+    {ok, Value} = eredis:q(C, ["GET", Type ++ ":" ++ Id]),
+    Value.
 
 update(Type, Id, Data) ->
     {ok, C} = start_link(),
