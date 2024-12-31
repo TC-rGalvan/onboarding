@@ -6,7 +6,18 @@ start_link() ->
 
 create(Type, Id, Data) ->
     {ok, C} = start_link(),
-    eredis:q(C, ["SET", Type ++ ":" ++ Id, Data]).
+    SetArguments = string:join([Type, integer_to_list(Id)], ":"),
+    %% LOG DEBUG
+    %% io:format("arguments: ~p~n", [SetArguments]),
+    case eredis:q(C, ["SET", SetArguments, Data]) of
+        {ok, <<"OK">>} ->
+            %% LOG DEBUG
+            io:format("created: ~n"),
+            {ok, Data};
+        {error, _} ->
+            {error, "Failed to create record: " ++ SetArguments}
+    end.
+        
 
 read(Type, Id) ->
     {ok, C} = start_link(),

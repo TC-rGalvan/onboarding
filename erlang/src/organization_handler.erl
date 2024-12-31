@@ -5,6 +5,10 @@
 -export([allowed_methods/2, content_types_accepted/2, content_types_provided/2]).
 -export([handle_json/2]).
 
+% -record(organization, {
+% 	id :: string(),
+% 	name :: string()
+% }).
 
 init(Req, _State) ->
 	Path = binary_to_list(cowboy_req:path(Req)),
@@ -37,7 +41,6 @@ handle_json(Req, State) ->
 					{handle_get_by_id(Id), Req, State};
 				list ->
 					{handle_get_all(), Req, State}
-
 			end;
 		<<"POST">> ->
 			handle_create_user(Req, State);
@@ -55,17 +58,23 @@ handle_get_by_id(Id) ->
 	
 
 handle_create_user(Req, State) ->
-	% Parse request, create user in Redis
-	Id = cowboy_req:binding(Req, id),
-	{ok, Body, Req2} = cowboy_req:body(Req),
-	case jsx:decode(Body) of
-		{ok, UserData} ->
-		redis_handler:create("org", Id, UserData),
-		{<<"{\"status\": \"ok\"}">>, Req2, State};
+	{ok, Body, Req1} = cowboy_req:read_body(Req),
+
+	BinaryBody = jsx:decode(Body),
+	% io:format("body: ~p~n", [BinaryBody]),
+	Id = maps:get(<<"id">>, BinaryBody),
+	% io:format("Id: ~p~n", [Id]),
+
+	case redis_handler:create("org", Id, jsx:encode(BinaryBody)) of
+	  {ok, User} ->
+		io:format("created user: ~p~n", [User]),
+		Req2 = cowboy_req:set_resp_body(User, Req1),
+		{true, Req2, State};
 		_ ->
-		{<<"{\"error\": \"Invalid JSON\"}">>, Req, State}
+			{<<"{\"error\": \"Failed to create user\"}">>, Req1, State}
 	end.
 
+	
 handle_update_user(Req, State) ->
 	% Update user
 	{ok, Body, Req2} = cowboy_req:body(Req),
@@ -83,24 +92,3 @@ handle_delete(Req, State) ->
 	redis_handler:delete("org", Id),
 	{<<"{\"status\": \"ok\"}">>, Req, State}.
 
-% to_json(Req, State) ->
-% 	io:format("to_json hit: ~p~n", [State]),
-% 	case maps:get(operation, State) of
-% 		list -> 
-% 			{redis_handler:list_all("org"), Req, State};
-% 		single -> 
-% 			Id = maps:get(id, State),
-% 			{redis_handler:read("org", Id), Req, State};
-% 		unknown -> 
-% 			{<<"{\"error\": \"Unknown operation\"}">>, Req, State}
-% 	end.
-	
-% from_json(Req, State) ->
-% 	{ok, Req, State}.
-
-% handle_search(Req, State) ->
-%     Id = cowboy_req:binding(id, Req),
-%     case role_manager_redis:get_role(binary_to_list(Id)) of
-%         {ok, Role} -> {Role, Req, State};
-%         {ok, undefined} -> {<<"{\"error\": \"Organization not found\"}">>, Req, State}
-%     end.
