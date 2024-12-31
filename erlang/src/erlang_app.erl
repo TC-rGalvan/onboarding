@@ -25,7 +25,12 @@ dispatch() ->
 				{"/organization", organization_handler, []},
 				{"/organization/all", organization_handler, []},
 				{"/organization/:id", organization_handler, []},
-				{"/organization/search", organization_handler, []}
+				{"/role", role_handler, []},
+				{"/role/all", role_handler, []},
+				{"/role/:id", role_handler, []},
+				{"/event", event_handler, []},
+				{"/event/all", event_handler, []},
+				{"/event/:id", event_handler, []}
 			]
 		}
 	]).

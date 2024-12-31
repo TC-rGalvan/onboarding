@@ -7,12 +7,9 @@ start_link() ->
 create(Type, Id, Data) ->
     {ok, C} = start_link(),
     SetArguments = string:join([Type, integer_to_list(Id)], ":"),
-    %% LOG DEBUG
-    %% io:format("arguments: ~p~n", [SetArguments]),
+
     case eredis:q(C, ["SET", SetArguments, Data]) of
         {ok, <<"OK">>} ->
-            %% LOG DEBUG
-            io:format("created: ~n"),
             {ok, Data};
         {error, _} ->
             {error, "Failed to create record: " ++ SetArguments}
@@ -26,11 +23,19 @@ read(Type, Id) ->
 
 update(Type, Id, Data) ->
     {ok, C} = start_link(),
-    eredis:q(C, ["SET", Type ++ ":" ++ Id, Data]).
+    SetArguments = string:join([Type, integer_to_list(Id)], ":"),
+    io:format("args: ~p~n", [SetArguments]),
+    case eredis:q(C, ["SET", SetArguments, Data]) of
+        {ok, <<"OK">>} ->
+            {ok, Data};
+        {error, _} ->
+            {error, "Failed to update record: " ++ SetArguments}
+    end.
 
 delete(Type, Id) ->
     {ok, C} = start_link(),
-    eredis:q(C, ["DEL", Type ++ ":" ++ Id]).
+    SetArguments = string:join([Type, Id], ":"),
+    eredis:q(C, ["DEL", SetArguments]).
 
 list_all(Type) ->
     {ok, C} = start_link(),
