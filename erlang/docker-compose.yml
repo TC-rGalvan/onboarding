@@ -1,0 +1,27 @@
+services:
+  app:
+    volumes:
+      - .:/app
+      - rebar3_cache:/root/.cache/rebar3
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENV: development # Change to 'production' for production builds
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    environment:
+      - ENV=development # Adjust as needed
+
+  redis:
+    image: redis/redis-stack
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
+  rebar3_cache:
