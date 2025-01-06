@@ -22,3 +22,21 @@ node_modules
 dump.rdb
 erlang_ls.config
 .vscode
+
+.eunit
+*.o
+*.beam
+*.plt
+erl_crash.dump
+.concrete/DEV_MODE
+erlang.mk
+
+# rebar 3
+.rebar3
+_build/
+_checkouts/
+_rel/
+.erlang.mk/
+deps/
+ebin/
+config/

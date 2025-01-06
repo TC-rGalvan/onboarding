@@ -1,0 +1,24 @@
+{"1.2.0",
+[{<<"cowboy">>,
+  {git,"https://github.com/extend/cowboy",
+       {ref,"022013b6c4e967957c7e0e7e7cdefa107fc48741"}},
+  0},
+ {<<"cowlib">>,
+  {git,"https://github.com/ninenines/cowlib",
+       {ref,"1c3d5defba28e92a88ce45c440d57e178ab1c514"}},
+  1},
+ {<<"eredis">>,
+  {git,"https://github.com/wooga/eredis.git",
+       {ref,"6845ed50e13f456ecd115bcf9de666a58a1529dc"}},
+  0},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"3.1.0">>},0},
+ {<<"ranch">>,
+  {git,"https://github.com/ninenines/ranch",
+       {ref,"a692f44567034dacf5efcaa24a24183788594eb7"}},
+  1}]}.
+[
+{pkg_hash,[
+ {<<"jsx">>, <<"D12516BAA0BB23A59BB35DCCAF02A1BD08243FCBB9EFE24F2D9D056CCFF71268">>}]},
+{pkg_hash_ext,[
+ {<<"jsx">>, <<"0C5CC8FDC11B53CC25CF65AC6705AD39E54ECC56D1C22E4ADB8F5A53FB9427F3">>}]}
+].
