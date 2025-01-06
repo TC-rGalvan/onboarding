@@ -50,7 +50,7 @@ handle_json(Req, State) ->
 	end.
 
 handle_get_all() ->
-	redis_handler:list_all("role").
+	redis_handler:read_all("role").
 
 handle_get_by_id(Id) ->
 	redis_handler:read("role", Id).

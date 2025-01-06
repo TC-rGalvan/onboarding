@@ -37,9 +37,9 @@ handle_json(Req, State) ->
 			case maps:get(operation, State) of
 				single -> 
 					Id = maps:get(id, State),
-					{handle_get_by_id(Id), Req, State};
+					handle_get_by_id(Id, Req, State);
 				list ->
-					{handle_get_all(), Req, State}
+					handle_get_all(Req, State)
 			end;
 		<<"POST">> ->
 			handle_create_event(Req, State);
@@ -49,11 +49,19 @@ handle_json(Req, State) ->
 			delete_resource(Req, State)
 	end.
 
-handle_get_all() ->
-	redis_handler:list_all("event").
+handle_get_all(Req, State) ->
+    {ok, Req1} = cowboy_req:reply(200, #{<<"content-type">> => <<"application/json">>}, 
+				jsx:encode(redis_handler:read_all("event")), Req),
+    {stop, Req1, State}.
 
-handle_get_by_id(Id) ->
-	redis_handler:read("event", Id).
+	handle_get_by_id(Id, Req, State) ->
+		Event = redis_handler:read("event", Id),
+		{ok, Req1} = cowboy_req:reply(200,
+					 #{<<"content-type">> => <<"application/json">>},
+					Event,
+					Req),
+		Req1 = cowboy_req:set_resp_body(Event, Req),
+		{stop, Req1, State}.
 
 handle_create_event(Req, State) ->
 	{ok, Body, Req1} = cowboy_req:read_body(Req),

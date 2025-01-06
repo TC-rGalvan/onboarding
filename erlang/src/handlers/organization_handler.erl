@@ -55,7 +55,7 @@ handle_json(Req, State) ->
 	end.
 
 handle_get_all() ->
-	redis_handler:list_all("org").
+	redis_handler:read_all("org").
 
 handle_get_by_id(Id) ->
 	redis_handler:read("org", Id).
