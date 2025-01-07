@@ -1,5 +1,5 @@
 -module(redis_handler).
--export([start_link/0, create/3, read/2, read_all/1, update/3, delete/2]).
+-export([start_link/0, create/3, read/2, read_all/1, update/3, delete/2, exists/2]).
 
 
 start_link() ->
@@ -47,3 +47,13 @@ delete(Type, Id) ->
     {ok, C} = start_link(),
     RedisArgs = string:join([Type, Id], ":"),
     eredis:q(C, ["DEL", RedisArgs]).
+
+exists(Type, Id) ->
+    {ok, C} = start_link(),
+    RedisArgs = string:join([Type, Id], ":"),
+    case eredis:q(C, ["EXISTS", RedisArgs]) of
+        {ok, <<"1">>} ->
+            true;
+        {ok, <<"2">>} ->
+            false
+    end.
