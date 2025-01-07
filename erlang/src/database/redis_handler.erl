@@ -3,7 +3,6 @@
 
 
 start_link() ->
-    io:format("Starting redis connection~n"),
     eredis:start_link().
 
 create(Type, Id, Data) ->

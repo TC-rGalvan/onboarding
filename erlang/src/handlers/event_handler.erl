@@ -3,7 +3,7 @@
 
 -export([init/2]).
 -export([allowed_methods/2, content_types_accepted/2, content_types_provided/2]).
--export([handle_json/2, delete_resource/2]).
+-export([handle_json/2, delete_resource/2, resource_exists/2]).
 
 
 init(Req, _State) ->
@@ -28,6 +28,22 @@ content_types_accepted(Req, State) ->
 
 content_types_provided(Req, State) ->
 	{[{{<<"application">>, <<"json">>, '*'}, handle_json}], Req, State}.
+
+resource_exists(Req, State) ->
+	Operation = maps:get(operation, State),
+
+	case Operation of
+		single -> 
+			Id = maps:get(id, State),
+			redis_handler:exists("event", Id);
+		list ->
+			{ok, Req, State}
+	end.
+
+%% to develop with JSON.SET (REDIS)
+% is_conflict(Req, State) ->
+% 	Id = maps:get(id, State),
+% 	redis_handler:exists("event", Id).
 
 
 handle_json(Req, State) ->
@@ -54,20 +70,21 @@ handle_get_all(Req, State) ->
 				jsx:encode(redis_handler:read_all("event")), Req),
     {stop, Req1, State}.
 
-	handle_get_by_id(Id, Req, State) ->
-		Event = redis_handler:read("event", Id),
-		{ok, Req1} = cowboy_req:reply(200,
-					 #{<<"content-type">> => <<"application/json">>},
-					Event,
-					Req),
-		Req1 = cowboy_req:set_resp_body(Event, Req),
-		{stop, Req1, State}.
+handle_get_by_id(Id, Req, State) ->
+	Event = redis_handler:read("event", Id),
+	{ok, Req1} = cowboy_req:reply(200,
+					#{<<"content-type">> => <<"application/json">>},
+				Event,
+				Req),
+	Req1 = cowboy_req:set_resp_body(Event, Req),
+	{stop, Req1, State}.
 
 handle_create_event(Req, State) ->
 	{ok, Body, Req1} = cowboy_req:read_body(Req),
 	BinaryBody = jsx:decode(Body),
 	Id = maps:get(<<"id">>, BinaryBody),
-
+	%% maps
+	%% patterna match
 	case redis_handler:create("event", Id, jsx:encode(BinaryBody)) of
 	  {ok, Event} ->
 		io:format("created event: ~p~n", [Event]),
