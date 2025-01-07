@@ -29,7 +29,10 @@ dispatch() ->
 				{"/role/:id", role_handler, []},
 				{"/event", event_handler, []},
 				{"/event/all", event_handler, []},
-				{"/event/:id", event_handler, []}
+				{"/event/:id", event_handler, []},
+				{"/user", user_handler, []},
+				{"/user/all", user_handler, []},
+				{"/user/:id", user_handler, []}
 			]
 		}
 	]).
