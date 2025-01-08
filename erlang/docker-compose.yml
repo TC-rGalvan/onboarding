@@ -1,0 +1,23 @@
+services:
+  app:
+    # Use the Dockerfile in the current directory to build the app image
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Map the container's port 8080 to the host's port 8080
+    ports:
+      - "8080:8080"
+    # Define a dependency on the Redis service
+    depends_on:
+      - redis
+    # Restart policy for container resilience during development
+    restart: always
+
+  redis:
+    # Use the official Redis Stack image with default configuration
+    image: redis/redis-stack:latest
+    # Expose Redis port (not strictly necessary, as it's only accessed internally)
+    ports:
+      - "6379:6379"
+    # Restart policy for container resilience during development
+    restart: always

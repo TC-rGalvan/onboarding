@@ -8,9 +8,11 @@ start_link() ->
 create(Type, Id, Data) ->
     {ok, C} = start_link(),
     RedisArgs = string:join([Type, integer_to_list(Id)], ":"),
-
+    RedisResponse = eredis:q(C, ["SET", RedisArgs, Data]),
+    io:format("RedisResponse: ~p~n", [RedisResponse]),
     case eredis:q(C, ["SET", RedisArgs, Data]) of
         {ok, <<"OK">>} ->
+            io:format("Data: ~p~n", [Data]),
             {ok, Data};
         {error, _} ->
             {error, "Failed to create record: " ++ RedisArgs}

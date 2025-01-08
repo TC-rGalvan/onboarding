@@ -3,11 +3,11 @@
     {description, "My OTP Application"},
     {vsn, "0.1.0"},
     {registered, []},
-    {mod, {erlang_app_app, []}},
+    {mod, {erlang_app, []}},
     {applications, [
         kernel,
         stdlib,
-        cowboy,
+        cowboy
     ]},
     {env, []},
     {modules, []}

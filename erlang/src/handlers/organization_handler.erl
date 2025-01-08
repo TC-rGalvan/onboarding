@@ -66,12 +66,12 @@ handle_create(Req, State) ->
 	Organization = #organization{id = Id, name = Name},
 	case json_validator:validate_organization(Organization, BinaryBody) of
 		true ->
+			CreateResponse = redis_handler:create("org", Id, jsx:encode(BinaryBody)),
+			io:format("CreateResponse: ~p~n", [CreateResponse]),
 			case redis_handler:create("org", Id, jsx:encode(BinaryBody)) of
-				{ok, User} ->
-					Req2 = cowboy_req:set_resp_body(User, Req1),
-					{true, Req2, State};
-				_ ->
-					{<<"{\"error\": \"Failed to create user\"}">>, Req1, State}
+				{ok, OrgCreated} ->
+					Req2 = cowboy_req:set_resp_body(OrgCreated, Req1),
+					{true, Req2, State}
 			end;
 		false ->
 			Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, "Incorrect Json Model", Req1),
@@ -88,11 +88,11 @@ handle_update(Req, State) ->
 	case json_validator:validate_organization(Organization, BinaryBody) of
 		true ->
 			case redis_handler:update("org", Id, jsx:encode(BinaryBody)) of
-				{ok, User} ->
-					Req2 = cowboy_req:set_resp_body(User, Req1),
+				{ok, Organization} ->
+					Req2 = cowboy_req:set_resp_body(Organization, Req1),
 					{true, Req2, State};
 				_ ->	
-					{<<"{\"error\": \"Failed to update user\"}">>, Req1, State}
+					{<<"{\"error\": \"Failed to update organization\"}">>, Req1, State}
 			end;
 		false ->
 			Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, "Incorrect Json Model", Req1),
@@ -101,5 +101,5 @@ handle_update(Req, State) ->
 
 delete_resource(Req, State) ->
 	Id = maps:get(id, State),
-	io:format("delete user: ~p~n", [Id]),
+	io:format("delete organization: ~p~n", [Id]),
 	{redis_handler:delete("org", Id), Req, State}.
