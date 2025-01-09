@@ -1,21 +1,28 @@
 -module(redis_handler).
--export([start_link/0, create/3, read/2, read_all/1, update/3, delete/2, exists/2]).
+-export([start_link/0, create/2, read/2, read_all/1, update/3, delete/2, exists/2]).
 
+-include("../records/records.hrl").
 
 start_link() ->
     eredis:start_link().
 
-create(Type, Id, Data) ->
+create(Type, Data) ->
     {ok, C} = start_link(),
-    RedisArgs = string:join([Type, integer_to_list(Id)], ":"),
-    RedisResponse = eredis:q(C, ["SET", RedisArgs, Data]),
-    io:format("RedisResponse: ~p~n", [RedisResponse]),
+    Key = get_key_id(Data),
+    io:format("Key: ~p~n", [Key]),
+    RedisArgs = string:join([Type, Key], ":"),
+    io:format("RedisResponse: ~p~n", [RedisArgs]),
+    RedisResponse = eredis:q(C, ["JSON.SET", RedisArgs, Data]),
+    io:format("RedisArgs: ~p~n", [RedisResponse]),
     case eredis:q(C, ["SET", RedisArgs, Data]) of
         {ok, <<"OK">>} ->
-            io:format("Data: ~p~n", [Data]),
-            {ok, Data};
-        {error, _} ->
-            {error, "Failed to create record: " ++ RedisArgs}
+            io:format("Data: ~p~n", [jsx:decode(Data)]),
+            % MapData = jsx:decode(Data),
+            %OrgRecord = #organization{id = maps:get(<<"id">>, MapData), name = maps:get(<<"name">>, MapData)},
+
+            {ok, jsx:encode(Data)};
+        {error, Reason} ->
+            {error, string:join([Reason, RedisArgs], " ")}
     end.
         
 read(Type, Id) ->
@@ -58,3 +65,13 @@ exists(Type, Id) ->
         {ok, <<"2">>} ->
             false
     end.
+
+get_key_id(Data) ->
+    MapData = jsx:decode(Data),
+    case maps:is_key(id, MapData) of
+        true ->
+            maps:get(<<"id">>, MapData);
+        false ->
+            uuid:to_string(uuid:uuid4())
+    end.
+    

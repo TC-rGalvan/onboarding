@@ -1,15 +1,15 @@
 -record(organization, {
-	id :: integer(),
+	id :: string(),
 	name :: string()
 }).
 
 -record(event, {
-    id :: integer(),
+    id :: string(),
     name :: string()
 }).
 
 -record(user, {
-    id :: integer(),
+    id :: string(),
     first_name :: string(),
     last_name :: string(),
     gender :: string(),
@@ -18,7 +18,7 @@
 }).
 
 -record(role, {
-    id :: integer(),
+    id :: string(),
     name :: string()
 }).
 
