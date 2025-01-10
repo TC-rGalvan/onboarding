@@ -5,7 +5,7 @@
 -export([init/2]).
 -export([allowed_methods/2, content_types_accepted/2, content_types_provided/2]).
 -export([resource_exists/2, delete_resource/2, is_conflict/2]).
--export([handle_json/2]).
+-export([handle_rest/2]).
 
 -include("../records/records.hrl").
 
@@ -32,14 +32,14 @@ allowed_methods(Req, State) ->
 
 %% handle callbacks distinct by method (get-post)
 content_types_accepted(Req, State) ->
-	io:format("accepted~n"), 
-    {[{{<<"application">>, <<"json">>, '*'}, handle_json}], Req, State}.
-	
-content_types_provided(Req, State) ->
-	io:format("provided~n"),
-    {[{{<<"application">>, <<"json">>, '*'}, handle_json}], Req, State}.
+    io:format("accepted~n"),
+    {[{{<<"application">>, <<"json">>, '*'}, handle_rest}], Req, State}.
 
-handle_json(Req, State) ->
+content_types_provided(Req, State) ->
+    io:format("provided~n"),
+    {[{{<<"application">>, <<"json">>, '*'}, handle_rest}], Req, State}.
+
+handle_rest(Req, State) ->
     case cowboy_req:method(Req) of
         <<"GET">> ->
             case maps:get(operation, State) of
@@ -62,13 +62,13 @@ handle_get_all(Req, State) ->
 
 handle_get_by_id(Id, Req, State) ->
     case redis_handler:read("org", Id) of
-		undefined ->
-			Req1 =
-				cowboy_req:reply(404,
-								 #{<<"content-type">> => <<"application/json">>},
-								 <<"{\"error\": \"Organization not found\"}">>,
-								 Req),
-			{true, Req1, State};
+        undefined ->
+            Req1 =
+                cowboy_req:reply(404,
+                                 #{<<"content-type">> => <<"application/json">>},
+                                 <<"{\"error\": \"Organization not found\"}">>,
+                                 Req),
+            {true, Req1, State};
         Value ->
             {Value, Req, State}
     end.
@@ -89,12 +89,12 @@ is_conflict(Req, State) ->
     Name = binary_to_list(maps:get(<<"name">>, BinaryBody)),
 
     case redis_handler:search_by_name("org", Name) of
-		%% Organization not exists, proceed with update
+        %% Organization not exists, proceed with update
         false ->
             {false, Req, StateWithBody};
-		%% Organization exists, evaluates if it's the same object,
-		%% Same object: proceed with update
-		%% Not same object: return conflict
+        %% Organization exists, evaluates if it's the same object,
+        %% Same object: proceed with update
+        %% Not same object: return conflict
         JsonObject ->
             IdFromState = maps:get(id, State),
             BinaryObject = jsx:decode(JsonObject),
@@ -134,24 +134,25 @@ handle_create(Req, State) ->
 
     case json_validator:validate(Organization, BinaryBody1) of
         true ->
-			case redis_handler:search_by_name("org", Name) of
-				false ->
-					case redis_handler:create("org", Id, BinaryBody1) of
-						{ok, <<"OK">>} ->
-							cowboy_req:reply(201,
-							#{<<"content-type">> => <<"application/json">>},
-							jsx:encode(BinaryBody1),
-							Req1)
-					end;
-				JsonObject ->
-					MapObject = jsx:decode(JsonObject),
-					Name = binary_to_list(maps:get(<<"name">>, MapObject)),
-					Message = string:join(["{\"error\": \"Organization ", " already exists\"}"], Name),
-					cowboy_req:reply(409,
-									#{<<"content-type">> => <<"application/json">>},
-									Message,
-									Req)
-			end;
+            case redis_handler:search_by_name("org", Name) of
+                false ->
+                    case redis_handler:create("org", Id, BinaryBody1) of
+                        {ok, <<"OK">>} ->
+                            cowboy_req:reply(201,
+                                             #{<<"content-type">> => <<"application/json">>},
+                                             jsx:encode(BinaryBody1),
+                                             Req1)
+                    end;
+                JsonObject ->
+                    MapObject = jsx:decode(JsonObject),
+                    Name = binary_to_list(maps:get(<<"name">>, MapObject)),
+                    Message =
+                        string:join(["{\"error\": \"Organization ", " already exists\"}"], Name),
+                    cowboy_req:reply(409,
+                                     #{<<"content-type">> => <<"application/json">>},
+                                     Message,
+                                     Req)
+            end;
         false ->
             Req2 =
                 cowboy_req:reply(400,
