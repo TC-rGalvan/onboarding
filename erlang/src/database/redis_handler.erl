@@ -10,11 +10,8 @@ start_link() ->
 
 create(Type, Id, BinaryData) ->
     {ok, C} = start_link(),
-
     Data = jsx:encode(BinaryData),
-    io:format("Id: ~p~n", [Id]),
     RedisArgs = string:join([Type, Id], ":"),
-    io:format("BeforeSend: ~p~n", [Data]),
     RedisResponse = eredis:q(C, ["JSON.SET", RedisArgs, "$", Data]),
     io:format("RedisResponse: ~p~n", [RedisResponse]),
     case RedisResponse of
@@ -31,9 +28,7 @@ read(Type, Id) ->
     {ok, Value} = eredis:q(C, ["JSON.GET", RedisArgs]),
     case eredis:q(C, ["JSON.GET", RedisArgs]) of
         {ok, Value} ->
-            Value;
-        _ ->
-            notfound
+            Value
     end.
 
 read_all(Type) ->

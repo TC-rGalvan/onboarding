@@ -32,9 +32,11 @@ allowed_methods(Req, State) ->
 
 %% handle callbacks distinct by method (get-post)
 content_types_accepted(Req, State) ->
+	io:format("accepted~n"), 
     {[{{<<"application">>, <<"json">>, '*'}, handle_json}], Req, State}.
-
+	
 content_types_provided(Req, State) ->
+	io:format("provided~n"),
     {[{{<<"application">>, <<"json">>, '*'}, handle_json}], Req, State}.
 
 handle_json(Req, State) ->
@@ -60,22 +62,20 @@ handle_get_all(Req, State) ->
 
 handle_get_by_id(Id, Req, State) ->
     case redis_handler:read("org", Id) of
+		undefined ->
+			Req1 =
+				cowboy_req:reply(404,
+								 #{<<"content-type">> => <<"application/json">>},
+								 <<"{\"error\": \"Organization not found\"}">>,
+								 Req),
+			{true, Req1, State};
         Value ->
-            Value;
-        notfound ->
-            Req1 =
-                cowboy_req:reply(409,
-                                 #{<<"content-type">> => <<"application/json">>},
-                                 <<"{\"error\": \"Organization already exists\"}">>,
-                                 Req),
-            {true, Req1, State}
+            {Value, Req, State}
     end.
 
 resource_exists(Req, State) ->
-    io:format("resource_exists hit ~p~n", [State]),
     case cowboy_req:method(Req) of
         <<"GET">> ->
-            io:format("GET"),
             {true, Req, State};
         _ ->
             entity_exists(Req, State)
@@ -108,7 +108,7 @@ is_conflict(Req, State) ->
                     Req2 =
                         cowboy_req:reply(409,
                                          #{<<"content-type">> => <<"application/json">>},
-                                         <<"{\"error\": \"Organization already exists\"}">>,
+                                         <<"{\"error\": \"Organization cannot be updated\"}">>,
                                          Req),
                     {true, Req2, StateWithBody}
             end
@@ -126,45 +126,49 @@ entity_exists(Req, State) ->
 handle_create(Req, State) ->
     {ok, Body, Req1} = cowboy_req:read_body(Req),
     BinaryBody = jsx:decode(Body),
-    io:format("BinaryBody: ~p~n", [BinaryBody]),
     BinaryBody1 = redis_handler:put_id(BinaryBody),
 
     Id = binary_to_list(maps:get(<<"id">>, BinaryBody1)),
     Name = binary_to_list(maps:get(<<"name">>, BinaryBody1)),
     Organization = #organization{id = Id, name = Name},
-    io:format("Id handle_create: ~p~n", [Id]),
-    io:format("Body handle_create: ~p~n", [BinaryBody1]),
+
     case json_validator:validate(Organization, BinaryBody1) of
         true ->
-            case redis_handler:create("org", Id, BinaryBody1) of
-                {ok, <<"OK">>} ->
-                    Req2 =
-                        cowboy_req:reply(201,
-                                         #{<<"content-type">> => <<"application/json">>},
-                                         jsx:encode(BinaryBody1),
-                                         Req1),
-                    {true, Req2, State}
-            end;
+			case redis_handler:search_by_name("org", Name) of
+				false ->
+					case redis_handler:create("org", Id, BinaryBody1) of
+						{ok, <<"OK">>} ->
+							cowboy_req:reply(201,
+							#{<<"content-type">> => <<"application/json">>},
+							jsx:encode(BinaryBody1),
+							Req1)
+					end;
+				JsonObject ->
+					MapObject = jsx:decode(JsonObject),
+					Name = binary_to_list(maps:get(<<"name">>, MapObject)),
+					Message = string:join(["{\"error\": \"Organization ", " already exists\"}"], Name),
+					cowboy_req:reply(409,
+									#{<<"content-type">> => <<"application/json">>},
+									Message,
+									Req)
+			end;
         false ->
             Req2 =
                 cowboy_req:reply(400,
                                  #{<<"content-type">> => <<"application/json">>},
-                                 "Incorrect Json Model",
-                                 Req1),
+                                 <<"{\"error\": \"Bad Json Model\"}">>,
+                                 Req),
             {true, Req2, State}
     end.
 
 handle_update(Req, State) ->
-    % {ok, Body, Req1} = cowboy_req:read_body(Req),
-    io:format("State: ~p~n", [State]),
     Body = maps:get(body, State),
-    io:format("BodyToUpdate: ~p~n", [Body]),
     BinaryBody = jsx:decode(Body),
-    io:format("BinaryBody: ~p~n", [BinaryBody]),
+
     Id = maps:get(<<"id">>, BinaryBody),
     Name = maps:get(<<"name">>, BinaryBody),
-
     Organization = #organization{id = Id, name = Name},
+
     case json_validator:validate(Organization, BinaryBody) of
         true ->
             case redis_handler:update("org", Id, jsx:encode(BinaryBody)) of
@@ -178,12 +182,11 @@ handle_update(Req, State) ->
             Req2 =
                 cowboy_req:reply(400,
                                  #{<<"content-type">> => <<"application/json">>},
-                                 "Incorrect Json Model",
+                                 <<"{\"error\": \"Bad Json Model\"}">>,
                                  Req),
             {true, Req2, State}
     end.
 
 delete_resource(Req, State) ->
     Id = maps:get(id, State),
-    io:format("delete organization: ~p~n", [Id]),
     {redis_handler:delete("org", Id), Req, State}.
