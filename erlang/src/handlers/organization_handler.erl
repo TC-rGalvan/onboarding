@@ -1,5 +1,4 @@
 -module(organization_handler).
-
 -behavior(cowboy_rest).
 
 -export([init/2]).
@@ -166,13 +165,13 @@ handle_update(Req, State) ->
     Body = maps:get(body, State),
     BinaryBody = jsx:decode(Body),
 
-    Id = maps:get(<<"id">>, BinaryBody),
+    Id = maps:get(id, State),
     Name = maps:get(<<"name">>, BinaryBody),
     Organization = #organization{id = Id, name = Name},
 
     case json_validator:validate(Organization, BinaryBody) of
         true ->
-            case redis_handler:update("org", Id, jsx:encode(BinaryBody)) of
+            case redis_handler:update("org", Id, BinaryBody) of
                 {ok, OrgUpdated} ->
                     Req2 = cowboy_req:set_resp_body(OrgUpdated, Req),
                     {true, Req2, State};

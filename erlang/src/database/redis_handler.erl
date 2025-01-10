@@ -45,9 +45,18 @@ update(Type, Id, Data) ->
     {ok, C} = start_link(),
     RedisArgs = string:join([Type, Id], ":"),
     io:format("args: ~p~n", [RedisArgs]),
-    case eredis:q(C, ["JSON.SET", RedisArgs, "$", Data]) of
+    io:format("Data: ~p~n", [Data]),
+
+    DataWithoutId = maps:remove(<<"id">>, Data),
+    io:format("DataWithoutId: ~p~n", [DataWithoutId]),
+    
+    RealData = jsx:encode(maps:put(<<"id">>, list_to_binary(Id), DataWithoutId)),
+    io:format("RealData: ~p~n", [RealData]),
+    % io:format("RealDataEncoded: ~p~n", [jsx:encode(RealData)]),
+
+    case eredis:q(C, ["JSON.SET", RedisArgs, "$", RealData]) of
         {ok, <<"OK">>} ->
-            {ok, Data};
+            {ok, RealData};
         {error, _} ->
             {error, "Failed to update record: " ++ RedisArgs}
     end.

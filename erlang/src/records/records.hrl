@@ -5,7 +5,7 @@
 
 -record(event, {
     id :: string(),
-    name :: string()
+type :: string()
 }).
 
 -record(user, {
