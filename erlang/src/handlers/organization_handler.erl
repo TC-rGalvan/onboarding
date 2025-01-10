@@ -52,43 +52,84 @@ handle_json(Req, State) ->
 	end.
 
 handle_get_all() ->
+	io:format("get all hit ~n"),
 	redis_handler:read_all("org").
 
 handle_get_by_id(Id) ->
 	redis_handler:read("org", Id).
 
 resource_exists(Req, State) ->
-	case maps:get(operation, State) of
-		single -> 
-			case maps:is_key(id, State) of
-				false -> {false, Req, State};
-				true ->
-					% {ok, Body, _Req1} = cowboy_req:read_body(Req),
-					% BinaryBody = jsx:decode(Body),
-					% Name = maps:get(<<"name">>, BinaryBody),
-					Id = maps:get(id, State),
-					case redis_handler:exists("org", Id) of
-						true -> {true, Req, State};
-						false -> {false, Req, State}
-					end
-			end;
-		list -> {false, Req, State}
+	io:format("resource_exists hit ~p~n", [State]),
+	case cowboy_req:method(Req) of 
+		<<"GET">> ->
+			io:format("GET"),
+			{true, Req, State};
+		<<"POST">> ->
+			io:format("POST"),
+			entity_exists(Req, State);
+		<<"PUT">> ->
+			io:format("PUT"),
+			entity_exists(Req, State)
 	end.
+
+is_conflict(Req, State) ->
+	{ok, Body, Req1} = cowboy_req:read_body(Req),
+	BinaryBody = jsx:decode(Body),
+	io:format("is_coflict hit~n"),
+	Name = binary_to_list(maps:get(<<"name">>, BinaryBody)),
+	case redis_handler:search_by_name("org", Name) of
+	  	false ->
+			%% Organization not exists, proceed with update
+			{false, Req1, State};
+		JsonObject ->
+			%% Organization exists, evaluates if it's the same object, 
+			%% Same object: procees with update
+			%% Not same object: return conflict
+			IdFromState = maps:get(id, State),
+			BinaryObject = jsx:decode(JsonObject),
+			IdFromDb = binary_to_list(maps:get(<<"id">>, BinaryObject)),
+
+			case IdFromState =:= IdFromDb of
+				true ->
+					% Req2 = cowboy_req:set_resp_body(Body, Req1),
+					{false, Req, State};
+				false -> 
+					Req2 = cowboy_req:reply(409, #{<<"content-type">> => <<"application/json">>},
+								<<"{\"error\": \"Organization already exists\"}">>,
+								Req1),
+					{true, Req2, State}
+			end
+	end.
+	
+
+entity_exists(Req, State) ->
+case maps:is_key(id, State) of
+			false -> {false, Req, State};
+			true ->
+				Id = maps:get(id, State),
+				{redis_handler:exists("org", Id), Req, State}
+				% case redis_handler:exists("org", Id) of
+				% 	true -> {true, Req, State};
+				% 	false -> {false, Req, State}
+				% end
+		end.
 
 handle_create(Req, State) ->
 	{ok, Body, Req1} = cowboy_req:read_body(Req),
 	BinaryBody = jsx:decode(Body),
-	Id = uuid:to_string(uuid:uuid4()),
-	BinaryBody1 = maps:put(<<"id">>, Id, BinaryBody),
+	io:format("BinaryBody: ~p~n", [BinaryBody]),
+	BinaryBody1 = redis_handler:put_id(BinaryBody),
 
+	Id = binary_to_list(maps:get(<<"id">>, BinaryBody1)),
 	Name = binary_to_list(maps:get(<<"name">>, BinaryBody1)),
 	Organization = #organization{ id = Id, name = Name},
-
+	io:format("Id handle_create: ~p~n", [Id]),
+	io:format("Body handle_create: ~p~n", [BinaryBody1]),
 	case json_validator:validate(Organization, BinaryBody1) of
 		true ->
-			case redis_handler:create("org", jsx:encode(BinaryBody1)) of
-				{ok, OrgCreated} ->
-					Req2 = cowboy_req:set_resp_body(OrgCreated, Req1),
+			case redis_handler:create("org", Id, BinaryBody1) of
+				{ok, <<"OK">>} ->
+					Req2 = cowboy_req:reply(201, #{<<"content-type">> => <<"application/json">>}, jsx:encode(BinaryBody1), Req1),
 					{true, Req2, State}
 			end;
 		false ->
@@ -98,7 +139,9 @@ handle_create(Req, State) ->
 
 handle_update(Req, State) ->
 	{ok, Body, Req1} = cowboy_req:read_body(Req),
+	io:format("BodyToUpdate: ~p~n", [Body]),
 	BinaryBody = jsx:decode(Body),
+	io:format("BinaryBody: ~p~n", [BinaryBody]),
 	Id = maps:get(<<"id">>, BinaryBody),
 	Name = maps:get(<<"name">>, BinaryBody),
 
@@ -116,11 +159,6 @@ handle_update(Req, State) ->
 			Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, "Incorrect Json Model", Req1),
 			{true, Req2, State}
 	end.
-
-is_conflict(Req, State) ->
-
-	Req2 = cowboy_req:reply(409, #{<<"content-type">> => <<"application/json">>}, "Conflict", Req),
-	{true, Req2, State}.
 
 delete_resource(Req, State) ->
 	Id = maps:get(id, State),

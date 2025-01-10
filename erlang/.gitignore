@@ -36,7 +36,7 @@ erlang.mk
 _build/
 _checkouts/
 _rel/
-.erlang.mk/
+# .erlang.mk/
 deps/
 ebin/
 config/
