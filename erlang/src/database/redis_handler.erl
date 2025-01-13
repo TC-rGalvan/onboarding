@@ -1,7 +1,7 @@
 -module(redis_handler).
 
 -export([start_link/0, create/3, read/2, read_all/1, update/3, delete/2, exists/2,
-         put_id/1, search_by_name/2]).
+         put_id/1, search_by_name/2, search_by_field/3, search_by_type/2]).
 
 -include("../records/records.hrl").
 
@@ -91,6 +91,36 @@ search_by_name(Type, Name) ->
     RedisArgs = string:join(["'@name:(", Name, ")"], ""),
     RedisResponse = eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]),
     io:format("SearchByName: ~p~n", [RedisResponse]),
+
+    case eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]) of
+        {ok, [<<"0">>]} ->
+            false;
+        {ok, [<<"1">>, RedisKey, [_, JsonObject]]} ->
+            io:format("RedisKey, ~p~n", [RedisKey]),
+            JsonObject
+    end.
+
+search_by_type(Type, TypeName) ->
+    {ok, C} = start_link(),
+    IndexName = string:join([Type, "index"], "_"),
+    RedisArgs = string:join(["'@type:(", TypeName, ")"], ""),
+    RedisResponse = eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]),
+    io:format("SearchByName: ~p~n", [RedisResponse]),
+
+    case eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]) of
+        {ok, [<<"0">>]} ->
+            false;
+        {ok, [<<"1">>, RedisKey, [_, JsonObject]]} ->
+            io:format("RedisKey, ~p~n", [RedisKey]),
+            JsonObject
+    end.
+
+search_by_field(Field, Type, Value) ->
+    {ok, C} = start_link(),
+    IndexName = string:join([Type, "index"], "_"),
+    RedisArgs = string:join(["'@", Field, ":(", Value, ")"], ""),
+    RedisResponse = eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]),
+    io:format("SearchByField: ~p~n", [RedisResponse]),
 
     case eredis:q(C, ["FT.SEARCH", IndexName, RedisArgs]) of
         {ok, [<<"0">>]} ->

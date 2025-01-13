@@ -85,9 +85,9 @@ is_conflict(Req, State) ->
 
     StateWithBody = maps:put(body, Body, State),
     BinaryBody = jsx:decode(Body),
-    Name = binary_to_list(maps:get(<<"type">>, BinaryBody)),
+    Type = binary_to_list(maps:get(<<"type">>, BinaryBody)),
 
-    case redis_handler:search_by_name("event", Name) of
+    case redis_handler:search_by_type("event", Type) of
         %% Event not exists, proceed with update
         false ->
             {false, Req, StateWithBody};
@@ -128,12 +128,12 @@ handle_create(Req, State) ->
     BinaryBody1 = redis_handler:put_id(BinaryBody),
 
     Id = binary_to_list(maps:get(<<"id">>, BinaryBody1)),
-    Name = binary_to_list(maps:get(<<"type">>, BinaryBody1)),
-    Event = #event{id = Id, type = Name},
+    Type = binary_to_list(maps:get(<<"type">>, BinaryBody1)),
+    Event = #event{id = Id, type = Type},
 
     case json_validator:validate(Event, BinaryBody1) of
         true ->
-            case redis_handler:search_by_name("event", Name) of
+            case redis_handler:search_by_type("event", Type) of
                 false ->
                     case redis_handler:create("event", Id, BinaryBody1) of
                         {ok, <<"OK">>} ->
@@ -144,9 +144,9 @@ handle_create(Req, State) ->
                     end;
                 JsonObject ->
                     MapObject = jsx:decode(JsonObject),
-                    Name = binary_to_list(maps:get(<<"type">>, MapObject)),
+                    Type = binary_to_list(maps:get(<<"type">>, MapObject)),
                     Message =
-                        string:join(["{\"error\": \"Event ", " already exists\"}"], Name),
+                        string:join(["{\"error\": \"Event ", " already exists\"}"], Type),
                     cowboy_req:reply(409,
                                      #{<<"content-type">> => <<"application/json">>},
                                      Message,
@@ -165,15 +165,15 @@ handle_update(Req, State) ->
     Body = maps:get(body, State),
     BinaryBody = jsx:decode(Body),
 
-    Id = maps:get(<<"id">>, BinaryBody),
-    Name = maps:get(<<"type">>, BinaryBody),
-    Event = #event{id = Id, type = Name},
+    Id = maps:get(id, State),
+    Type = maps:get(<<"type">>, BinaryBody),
+    Event = #event{id = Id, type = Type},
 
     case json_validator:validate(Event, BinaryBody) of
         true ->
-            case redis_handler:update("event", Id, jsx:encode(BinaryBody)) of
-                {ok, OrgUpdated} ->
-                    Req2 = cowboy_req:set_resp_body(OrgUpdated, Req),
+            case redis_handler:update("event", Id, BinaryBody) of
+                {ok, EventUpdated} ->
+                    Req2 = cowboy_req:set_resp_body(EventUpdated, Req),
                     {true, Req2, State};
                 _ ->
                     {<<"{\"error\": \"Failed to update event\"}">>, Req, State}
