@@ -33,6 +33,7 @@ validate_organization(Record, BinaryBody) ->
     BinaryFields = maps:keys(BinaryBody),
     Fields = [binary_to_atom(Field, utf8) || Field <- BinaryFields],
     RecordFields = record_info(fields, organization),
+
     case lists:usort(RecordFields) =:= lists:usort(Fields) of
         true ->
             validate_fields(RecordFields, Record, BinaryBody);
@@ -44,6 +45,10 @@ validate_event(Record, BinaryBody) ->
     BinaryFields = maps:keys(BinaryBody),
     Fields = [binary_to_atom(Field, utf8) || Field <- BinaryFields],
     RecordFields = record_info(fields, event),
+
+    io:format("BinaryFields: ~p~n", [BinaryFields]),
+    io:format("Fields: ~p~n", [Fields]),
+    io:format("RecordFields: ~p~n", [RecordFields]),
 
     case lists:usort(RecordFields) =:= lists:usort(Fields) of
         true ->
