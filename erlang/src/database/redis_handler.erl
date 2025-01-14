@@ -6,7 +6,7 @@
 -include("../records/records.hrl").
 
 start_link() ->
-    eredis:start_link(). %% just once per app
+    eredis:start_link("redis", 6379). %% just once per app
 
 create(Type, Id, BinaryData) ->
     {ok, C} = start_link(),
