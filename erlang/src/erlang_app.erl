@@ -26,18 +26,18 @@ dispatch() ->
 	cowboy_router:compile([
 		{'_', [
 				{"/json", hello_world, []},
-				{"/organization", organization_handler, []},
-				{"/organization/all", organization_handler, []},
-				{"/organization/:id", organization_handler, []},
-				{"/role", role_handler, []},
-				{"/role/all", role_handler, []},
-				{"/role/:id", role_handler, []},
-				{"/event", event_handler, []},
-				{"/event/all", event_handler, []},
-				{"/event/:id", event_handler, []},
-				{"/user", user_handler, []},
-				{"/user/all", user_handler, []},
-				{"/user/:id", user_handler, []}
+				{"/organizations", organization_handler, []},
+				{"/organizations/all", organization_handler, []},
+				{"/organizations/:id", organization_handler, []},
+				{"/roles", role_handler, []},
+				{"/roles/all", role_handler, []},
+				{"/roles/:id", role_handler, []},
+				{"/events", event_handler, []},
+				{"/events/all", event_handler, []},
+				{"/events/:id", event_handler, []},
+				{"/users", user_handler, []},
+				{"/users/all", user_handler, []},
+				{"/users/:id", user_handler, []}
 			]
 		}
 	]).

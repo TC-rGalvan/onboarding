@@ -11,11 +11,11 @@
 init(Req, _State) ->
     Path = binary_to_list(cowboy_req:path(Req)),
     case string:split(Path, "/", all) of
-        ["", "user", "all"] ->
+        ["", "users", "all"] ->
             {cowboy_rest, Req, #{operation => list}};
-        ["", "user", Id] ->
+        ["", "users", Id] ->
             {cowboy_rest, Req, #{operation => single, id => Id}};
-        ["", "user"] ->
+        ["", "users"] ->
             {cowboy_rest, Req, #{operation => single}};
         _ ->
             {cowboy_rest, Req, #{operation => unknown}}
