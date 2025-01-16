@@ -14,11 +14,17 @@ type :: string()
     last_name :: string(),
     gender :: string(),
     mrn :: string(),
-    organization :: string()
+    organization :: string(),
+    role :: string()
 }).
 
 -record(role, {
     id :: string(),
     name :: string()
+}).
+
+-record(user_event, {
+    userId :: string(),
+    eventId :: string()
 }).
 
