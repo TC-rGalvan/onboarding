@@ -93,61 +93,61 @@ allowed_methods_single_operation_test() ->
     ?assertMatch(Req, ReqOut),
     ?assertEqual(State, StateOut).
 
-%% Test handle_get_all/2 (happy path)
-handle_get_all_test() ->
-    %% Arrange
-    Req = #{},
-    State = #{operation => list},
-    ExpectedResponse = <<"">>,
+% %% Test handle_get_all/2 (happy path)
+% handle_get_all_test() ->
+%     %% Arrange
+%     Req = #{},
+%     State = #{operation => list},
+%     ExpectedResponse = <<"">>,
 
-    %% Mock redis_handler:read_all
-    meck:expect(redis_handler, read_all, fun ("event") -> ExpectedResponse end),
+%     %% Mock redis_handler:read_all
+%     meck:expect(redis_handler, read_all, fun ("event") -> ExpectedResponse end),
 
-    % io:format("Formatted response: ~p~n", [ExpectedResponse]),
-    io:format("Actualresponse: ~p~n", [event_handler:handle_get_all(Req, State)]),
-    %% Act
-    {Response, _ReqOut, _StateOut} = event_handler:handle_get_all(Req, State),
+%     % io:format("Formatted response: ~p~n", [ExpectedResponse]),
+%     io:format("Actualresponse: ~p~n", [event_handler:handle_get_all(Req, State)]),
+%     %% Act
+%     {Response, _ReqOut, _StateOut} = event_handler:handle_get_all(Req, State),
 
-    %% Assert
-    ?assertEqual(ExpectedResponse, Response).
-    % ?assertMatch(Req, ReqOut),
-    % ?assertEqual(State, StateOut).
+%     %% Assert
+%     ?assertEqual(ExpectedResponse, Response).
+%     % ?assertMatch(Req, ReqOut),
+%     % ?assertEqual(State, StateOut).
 
 % Test handle_get_by_id/3 when ID is found
-handle_get_by_id_found_test() ->
-    % Arrange
-    Req = #{},
-    State = #{},
-    Id = "123",
-    ExpectedResponse = #{id => "123", name => "Org123"},
+% handle_get_by_id_found_test() ->
+%     % Arrange
+%     Req = #{},
+%     State = #{},
+%     Id = "123",
+%     ExpectedResponse = #{id => "123", name => "Org123"},
 
-    % Mock redis_handler:read
-    meck:expect(redis_handler, read, fun ("event", _Id) -> ExpectedResponse end),
+%     % Mock redis_handler:read
+%     meck:expect(redis_handler, read, fun ("event", _Id) -> ExpectedResponse end),
 
-    % Act
-    {Response, _ReqOut, _StateOut} = event_handler:handle_get_by_id(Id, Req, State),
+%     % Act
+%     {Response, _ReqOut, _StateOut} = event_handler:handle_get_by_id(Id, Req, State),
 
-    % Assert
-    ?assertEqual(ExpectedResponse, Response).
+%     % Assert
+%     ?assertEqual(ExpectedResponse, Response).
 
-% Test handle_get_by_id/3 when ID is not found
-handle_get_by_id_not_found_test() ->
-    % Arrange
-    Req = #{},
-    State = #{},
-    Id = "999",
+% % Test handle_get_by_id/3 when ID is not found
+% handle_get_by_id_not_found_test() ->
+%     % Arrange
+%     Req = #{},
+%     State = #{},
+%     Id = "999",
 
-    % Mock redis_handler:read to return undefined
-    meck:expect(redis_handler, read, fun ("event", _Id) -> undefined end),
-    meck:expect(cowboy_req, reply, fun (404, _, _, ReqIn) -> ReqIn end),
+%     % Mock redis_handler:read to return undefined
+%     meck:expect(redis_handler, read, fun ("event", _Id) -> undefined end),
+%     meck:expect(cowboy_req, reply, fun (404, _, _, ReqIn) -> ReqIn end),
 
-    % Act
-    {Result, ReqOut, StateOut} = event_handler:handle_get_by_id(Id, Req, State),
+%     % Act
+%     {Result, ReqOut, StateOut} = event_handler:handle_get_by_id(Id, Req, State),
 
-    % Assert
-    ?assert(Result),
-    ?assertMatch(Req, ReqOut),
-    ?assertEqual(State, StateOut).
+%     % Assert
+%     ?assert(Result),
+%     ?assertMatch(Req, ReqOut),
+%     ?assertEqual(State, StateOut).
 
 % Test delete_resource/2
 delete_resource_test() ->

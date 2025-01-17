@@ -5,11 +5,6 @@
 -export([stop/1]).
 
 start(_Type, _Args) ->
-	% io:format("BeforeSeedIndexHandler~n"),
-	% index_seeder:create_all_indexes(),
-	% io:format("Application started successfully with indexes."),
-	% io:format("AfterSeedIndexHandler~n"),
-
 	{ok, _} = cowboy:start_clear(my_http_listener,
 			[{port, 8080}],
 			#{

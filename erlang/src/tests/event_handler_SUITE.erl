@@ -1,28 +1,28 @@
--module(organization_handler_SUITE).
+-module(event_handler_SUITE).
 
 %% Common Test exports
 -export([all/0, init_per_suite/1, end_per_suite/1, init_per_testcase/2, end_per_testcase/2]).
--export([post_organization_test/1, put_organization_test/1, get_organization_test/1,
-         get_all_organizations_test/1, delete_organization_test/1]).
+-export([post_event_test/1, put_event_test/1, get_event_test/1,
+         get_all_events_test/1, delete_event_test/1]).
 
 %% Include Common Test macros
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
 %% Dependencies
--define(BASE_URL, "http://127.0.0.1:8080/organizations").
+-define(BASE_URL, "http://127.0.0.1:8080/events").
 
 %% Test Cases
 all() ->
-    [post_organization_test, put_organization_test, get_organization_test,
-     get_all_organizations_test, delete_organization_test].
+    [post_event_test, put_event_test, get_event_test,
+     get_all_events_test, delete_event_test].
 
 %% Per-Suite Setup/Teardown
 init_per_suite(Config) ->
-    %% Start the Cowboy server with the `organization_handler`
+    %% Start the Cowboy server with the `event_handler`
     Dispatch = cowboy_router:compile([
         {'_', [
-            {"/organizations/[...]", organization_handler, []}
+            {"/events/[...]", event_handler, []}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(my_http_listener, [{port, 8080}], #{
@@ -55,8 +55,8 @@ end_per_testcase(_TestCase, _Config) ->
 
 %% Test Cases
 
-%% Test POST /organizations
-post_organization_test(_Config) ->
+%% Test POST /events
+post_event_test(_Config) ->
     %% Mock `redis_handler:put_id` and `redis_handler:create`
     meck:expect(redis_handler, put_id, fun(Json) -> maps:put(<<"id">>, <<"123">>, Json) end),
     meck:expect(redis_handler, create, fun(_, _, _) -> {ok, <<"OK">>} end),
@@ -71,8 +71,8 @@ post_organization_test(_Config) ->
     ExpectedResponse = <<"{\"name\":\"New Org\",\"id\":\"123\"}">>,
     ?assertEqual(ExpectedResponse, ResponseBody).
 
-%% Test PUT /organizations/{id}
-put_organization_test(_Config) ->
+%% Test PUT /events/{id}
+put_event_test(_Config) ->
     %% Mock `redis_handler:update`
     meck:expect(redis_handler, update, fun(_, "123", _) -> {ok, <<"{\"name\":\"Updated Org\",\"id\":\"123\"}">>} end),
     meck:expect(json_validator, validate, fun(_, _) -> true end),
@@ -87,8 +87,8 @@ put_organization_test(_Config) ->
     ExpectedResponse = <<"{\"name\":\"Updated Org\",\"id\":\"123\"}">>,
     ?assertEqual(ExpectedResponse, ResponseBody).
 
-%% Test GET /organizations/{id}
-get_organization_test(_Config) ->
+%% Test GET /events/{id}
+get_event_test(_Config) ->
     %% Mock `redis_handler:read`
     meck:expect(redis_handler, read, fun(_, "123") -> <<"{\"name\":\"Test Org\",\"id\":\"123\"}">> end),
 
@@ -100,8 +100,8 @@ get_organization_test(_Config) ->
     ExpectedResponse = <<"{\"name\":\"Test Org\",\"id\":\"123\"}">>,
     ?assertEqual(ExpectedResponse, ResponseBody).
 
-%% Test GET /organizations/all
-get_all_organizations_test(_Config) ->
+%% Test GET /events/all
+get_all_events_test(_Config) ->
     %% Mock `redis_handler:read_all`
     meck:expect(redis_handler, read_all, fun(_) -> [
         <<"{\"name\":\"Org 1\",\"id\":\"1\"}">>,
@@ -116,8 +116,8 @@ get_all_organizations_test(_Config) ->
     ExpectedResponse = <<"[{\"name\":\"Org 1\",\"id\":\"1\"},{\"name\":\"Org 2\",\"id\":\"2\"}]">>,
     ?assertEqual(ExpectedResponse, ResponseBody).
 
-%% Test DELETE /organizations/{id}
-delete_organization_test(_Config) ->
+%% Test DELETE /events/{id}
+delete_event_test(_Config) ->
     %% Mock `redis_handler:delete`
     meck:expect(redis_handler, delete, fun(_, "123") -> ok end),
 
