@@ -25,21 +25,74 @@ read(Type, Id) ->
     {ok, C} = start_link(),
     RedisArgs = string:join([Type, Id], ":"),
     io:format("RedisArgs: ~p~n", [RedisArgs]),
-    {ok, Value} = eredis:q(C, ["JSON.GET", RedisArgs]),
     case eredis:q(C, ["JSON.GET", RedisArgs]) of
         {ok, Value} ->
-            Value
+            case Value =:= undefined of
+                false ->
+                    case Type of 
+                        "user" ->
+                            io:format("Value: ~p~n", [Value]),
+                            BinaryBody = jsx:decode(Value),
+                            {ok, OrganizationName} = get_organization_name(binary_to_list(maps:get(<<"organization">>, BinaryBody))),
+                            {ok, RoleName} = get_role_name(binary_to_list(maps:get(<<"role">>, BinaryBody))),
+                            BinaryBody1 = maps:remove(<<"organization">>, BinaryBody),
+                            BinaryBody2 = maps:remove(<<"role">>, BinaryBody1),
+                            BinaryBody3 = maps:put(<<"organization">>, list_to_binary(OrganizationName), BinaryBody2),
+                            BinaryBody4 = maps:put(<<"role">>, list_to_binary(RoleName), BinaryBody3),
+                            jsx:encode(BinaryBody4);
+                        _ ->
+                            Value
+                    end;
+                true ->
+                    undefined
+            end
+    end.
+get_organization_name(OrganizationId) ->
+    Valid = redis_handler:read("org", OrganizationId),
+    case Valid =:= undefined of
+        false ->
+            io:format("Valid: ~p~n", [Valid]),
+            DecodedJson = jsx:decode(Valid),
+            Name = binary_to_list(maps:get(<<"name">>, DecodedJson)),
+            {ok, Name};
+        true ->
+            {error, "Organization does not exist."}
+    end.
+
+get_role_name(RoleId) -> 
+    Valid = redis_handler:read("role", RoleId),
+    case Valid =:= undefined of
+        false ->
+            io:format("Valid: ~p~n", [Valid]),
+            DecodedJson = jsx:decode(Valid),
+            Name = binary_to_list(maps:get(<<"name">>, DecodedJson)),
+            {ok, Name};
+        true  ->
+            {error, "Role does not exist."}
     end.
 
 read_all(Type) ->
     {ok, C} = start_link(),
     RedisArgs = string:join([Type, "*"], ":"),
     {ok, Keys} = eredis:q(C, ["KEYS", RedisArgs]),
-    lists:map(fun(Key) ->
-                 {ok, Value} = eredis:q(C, ["JSON.GET", Key]),
-                 Value
-              end,
-              Keys).
+    JsonValues = lists:map(fun(Key) ->
+                               {ok, Value} = eredis:q(C, ["JSON.GET", Key]),
+                               case Type of
+                                   "user" ->
+                                        BinaryBody = jsx:decode(Value),
+                                        {ok, OrganizationName} = get_organization_name(binary_to_list(maps:get(<<"organization">>, BinaryBody))),
+                                        {ok, RoleName} = get_role_name(binary_to_list(maps:get(<<"role">>, BinaryBody))),
+                                        BinaryBody1 = maps:remove(<<"organization">>, BinaryBody),
+                                        BinaryBody2 = maps:remove(<<"role">>, BinaryBody1),
+                                        BinaryBody3 = maps:put(<<"organization">>, list_to_binary(OrganizationName), BinaryBody2),
+                                        BinaryBody4 = maps:put(<<"role">>, list_to_binary(RoleName), BinaryBody3),
+                                        jsx:encode(BinaryBody4);
+
+                                    _ ->
+                                        Value
+                               end
+                           end, Keys),
+    JsonValues.
 
 update(Type, Id, Data) ->
     {ok, C} = start_link(),

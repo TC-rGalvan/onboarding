@@ -7,6 +7,7 @@ FROM erlang:latest AS build
 # This ensures we use Docker's build cache effectively
 COPY rebar.config rebar.lock ./
 COPY src/ ./src/
+COPY test/ ./test/
 COPY relx.config ./
 
 # Install rebar3 for building the application

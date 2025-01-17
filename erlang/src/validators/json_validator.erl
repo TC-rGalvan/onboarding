@@ -25,6 +25,8 @@ validate(Record, BinaryBody) ->
             validate_user(Record, BinaryBody);
         #role{} ->
             validate_role(Record, BinaryBody);
+        #user_event{} ->
+            validate_user_event(Record, BinaryBody);
         _ ->
             false
     end.
@@ -45,10 +47,6 @@ validate_event(Record, BinaryBody) ->
     BinaryFields = maps:keys(BinaryBody),
     Fields = [binary_to_atom(Field, utf8) || Field <- BinaryFields],
     RecordFields = record_info(fields, event),
-
-    io:format("BinaryFields: ~p~n", [BinaryFields]),
-    io:format("Fields: ~p~n", [Fields]),
-    io:format("RecordFields: ~p~n", [RecordFields]),
 
     case lists:usort(RecordFields) =:= lists:usort(Fields) of
         true ->
@@ -73,6 +71,18 @@ validate_role(Record, BinaryBody) ->
     BinaryFields = maps:keys(BinaryBody),
     Fields = [binary_to_atom(Field, utf8) || Field <- BinaryFields],
     RecordFields = record_info(fields, role),
+
+    case lists:usort(RecordFields) =:= lists:usort(Fields) of
+        true ->
+            validate_fields(RecordFields, Record, BinaryBody);
+        false ->
+            false
+    end.
+
+validate_user_event(Record, BinaryBody) ->
+    BinaryFields = maps:keys(BinaryBody),
+    Fields = [binary_to_atom(Field, utf8) || Field <- BinaryFields],
+    RecordFields = record_info(fields, user_event),
 
     case lists:usort(RecordFields) =:= lists:usort(Fields) of
         true ->

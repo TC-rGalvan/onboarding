@@ -129,37 +129,58 @@ handle_create(Req, State) ->
 
     Id = binary_to_list(maps:get(<<"id">>, BinaryBody1)),
     FirstName = binary_to_list(maps:get(<<"first_name">>, BinaryBody1)),
+    Organization = binary_to_list(maps:get(<<"organization">>, BinaryBody1)),
+    Role = binary_to_list(maps:get(<<"role">>, BinaryBody1)),
     User = #user{id = Id, first_name = FirstName},
 
-    case json_validator:validate(User, BinaryBody1) of
-        true ->
-            case redis_handler:search_by_name("user", FirstName) of
-                false ->
-                    case redis_handler:create("user", Id, BinaryBody1) of
-                        {ok, <<"OK">>} ->
-                            cowboy_req:reply(201,
+
+    case user_validator:validate(Organization, Role) of
+        {ok, OrganizationName, RoleName} ->
+            case json_validator:validate(User, BinaryBody1) of
+                true ->
+                    case redis_handler:search_by_name("user", FirstName) of
+                        false ->
+                            case redis_handler:create("user", Id, BinaryBody1) of
+                                {ok, <<"OK">>} ->
+                                    BinaryBody2 = maps:remove(<<"organization">>, BinaryBody1),
+                                    BinaryBody3 = maps:remove(<<"role">>, BinaryBody2),
+                                    BinaryBody4 = maps:put(<<"organization">>, list_to_binary(OrganizationName), BinaryBody3),
+                                    BinaryBody5 = maps:put(<<"role">>, list_to_binary(RoleName), BinaryBody4),
+                                    cowboy_req:reply(201,
+                                                     #{<<"content-type">> => <<"application/json">>},
+                                                     jsx:encode(BinaryBody5),
+                                                     Req1)
+                            end;
+                        JsonObject ->
+                            MapObject = jsx:decode(JsonObject),
+                            Name = binary_to_list(maps:get(<<"name">>, MapObject)),
+                            Message =
+                                string:join(["{\"error\": \"User ", " already exists\"}"], Name),
+                            cowboy_req:reply(409,
                                              #{<<"content-type">> => <<"application/json">>},
-                                             jsx:encode(BinaryBody1),
-                                             Req1)
+                                             Message,
+                                             Req)
                     end;
-                JsonObject ->
-                    MapObject = jsx:decode(JsonObject),
-                    Name = binary_to_list(maps:get(<<"name">>, MapObject)),
-                    Message =
-                        string:join(["{\"error\": \"User ", " already exists\"}"], Name),
-                    cowboy_req:reply(409,
-                                     #{<<"content-type">> => <<"application/json">>},
-                                     Message,
-                                     Req)
+                false ->
+                    Req2 =
+                        cowboy_req:reply(400,
+                                         #{<<"content-type">> => <<"application/json">>},
+                                         <<"{\"error\": \"Bad Json Model\"}">>,
+                                         Req),
+                    {true, Req2, State}
             end;
-        false ->
+        {error, Reason} ->
+            io:format("Reason: ~p~n", [Reason]),
+            Error = string:join(["{\"error\": \"", Reason, "\"}"],""),
             Req2 =
                 cowboy_req:reply(400,
                                  #{<<"content-type">> => <<"application/json">>},
-                                 <<"{\"error\": \"Bad Json Model\"}">>,
+                                 Error,
                                  Req),
             {true, Req2, State}
     end.
+
+   
 
 handle_update(Req, State) ->
     Body = maps:get(body, State),
@@ -169,20 +190,44 @@ handle_update(Req, State) ->
     FirstName = maps:get(<<"first_name">>, BinaryBody),
     User = #user{id = Id, first_name = FirstName},
 
-    case json_validator:validate(User, BinaryBody) of
-        true ->
-            case redis_handler:update("user", Id, BinaryBody) of
-                {ok, UserUpdated} ->
-                    Req2 = cowboy_req:set_resp_body(UserUpdated, Req),
-                    {true, Req2, State};
-                _ ->
-                    {<<"{\"error\": \"Failed to update user\"}">>, Req, State}
+    Organization = binary_to_list(maps:get(<<"organization">>, BinaryBody)),
+    Role = binary_to_list(maps:get(<<"role">>, BinaryBody)),
+
+    case user_validator:validate(Organization, Role) of
+        {ok, OrganizationName, RoleName} ->
+            case json_validator:validate(User, BinaryBody) of
+                true ->
+                    case redis_handler:update("user", Id, BinaryBody) of
+                        {ok, _UserUpdated} ->
+                            BinaryBody1 = maps:remove(<<"organization">>, BinaryBody),
+                            BinaryBody2 = maps:remove(<<"role">>, BinaryBody1),
+                            BinaryBody3 = maps:put(<<"organization">>, list_to_binary(OrganizationName), BinaryBody2),
+                            BinaryBody4 = maps:put(<<"role">>, list_to_binary(RoleName), BinaryBody3),
+                            Req2 = cowboy_req:set_resp_body(jsx:encode(BinaryBody4), Req),
+                            {true, Req2, State};
+                        _ ->
+                            Req2 =
+                                cowboy_req:reply(500,
+                                                 #{<<"content-type">> => <<"application/json">>},
+                                                 <<"{\"error\": \"Failed to update user\"}">>,
+                                                 Req),
+                            {true, Req2, State}
+                    end;
+                false ->
+                    Req2 =
+                        cowboy_req:reply(400,
+                                         #{<<"content-type">> => <<"application/json">>},
+                                         <<"{\"error\": \"Bad Json Model\"}">>,
+                                         Req),
+                    {true, Req2, State}
             end;
-        false ->
+        {error, Reason} ->
+            io:format("Reason: ~p~n", [Reason]),
+            Error = string:join(["{\"error\": \"", Reason, "\"}"],""),
             Req2 =
                 cowboy_req:reply(400,
                                  #{<<"content-type">> => <<"application/json">>},
-                                 <<"{\"error\": \"Bad Json Model\"}">>,
+                                 Error,
                                  Req),
             {true, Req2, State}
     end.

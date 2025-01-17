@@ -37,7 +37,8 @@ dispatch() ->
 				{"/events/:id", event_handler, []},
 				{"/users", user_handler, []},
 				{"/users/all", user_handler, []},
-				{"/users/:id", user_handler, []}
+				{"/users/:id", user_handler, []},
+				{"/users-events", user_event_handler, []}
 			]
 		}
 	]).

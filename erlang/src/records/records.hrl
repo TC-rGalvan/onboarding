@@ -24,7 +24,9 @@ type :: string()
 }).
 
 -record(user_event, {
+    id :: string(),
     userId :: string(),
     eventId :: string()
 }).
+
 
